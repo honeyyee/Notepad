@@ -1,0 +1,12 @@
+create extension if not exists pgcrypto;
+create table if not exists public.notes(id uuid primary key default gen_random_uuid(),author text not null default 'a stranger' check(char_length(author) between 1 and 30),category text not null default 'thought' check(category in('thought','question','kindness','recommendation','random')),content text not null check(char_length(content) between 1 and 600),created_at timestamptz not null default now());
+create table if not exists public.replies(id uuid primary key default gen_random_uuid(),note_id uuid not null references public.notes(id) on delete cascade,author text not null default 'a stranger',content text not null check(char_length(content) between 1 and 500),created_at timestamptz not null default now());
+create table if not exists public.reactions(id uuid primary key default gen_random_uuid(),note_id uuid not null references public.notes(id) on delete cascade,visitor_id text not null,created_at timestamptz not null default now(),unique(note_id,visitor_id));
+create table if not exists public.reports(id uuid primary key default gen_random_uuid(),note_id uuid not null references public.notes(id) on delete cascade,reason text not null,created_at timestamptz not null default now());
+alter table public.notes enable row level security; alter table public.replies enable row level security; alter table public.reactions enable row level security; alter table public.reports enable row level security;
+create policy "public read notes" on public.notes for select to anon,authenticated using(true); create policy "public add notes" on public.notes for insert to anon,authenticated with check(true);
+create policy "public read replies" on public.replies for select to anon,authenticated using(true); create policy "public add replies" on public.replies for insert to anon,authenticated with check(true);
+create policy "public read reactions" on public.reactions for select to anon,authenticated using(true); create policy "public add reactions" on public.reactions for insert to anon,authenticated with check(true); create policy "public remove reactions" on public.reactions for delete to anon,authenticated using(true);
+create policy "public report" on public.reports for insert to anon,authenticated with check(true);
+alter publication supabase_realtime add table public.notes; alter publication supabase_realtime add table public.replies; alter publication supabase_realtime add table public.reactions;
+create index if not exists replies_note_id_idx on public.replies(note_id);
