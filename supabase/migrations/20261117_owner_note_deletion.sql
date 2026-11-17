@@ -20,7 +20,7 @@ create or replace function public.create_note_with_owner(
 returns public.notes
 language plpgsql
 security definer
-set search_path = public, private, pg_temp
+set search_path = public, extensions, private, pg_temp
 as $$
 declare
   created_note public.notes;
@@ -36,7 +36,7 @@ begin
   insert into private.note_delete_keys(note_id, token_hash)
   values (
     created_note.id,
-    encode(public.digest(convert_to(p_owner_token, 'UTF8'), 'sha256'), 'hex')
+    encode(digest(convert_to(p_owner_token, 'UTF8'), 'sha256'), 'hex')
   );
 
   return created_note;
@@ -47,7 +47,7 @@ create or replace function public.delete_own_note(p_note_id uuid, p_owner_token 
 returns boolean
 language plpgsql
 security definer
-set search_path = public, private, pg_temp
+set search_path = public, extensions, private, pg_temp
 as $$
 declare
   removed_count integer;
@@ -60,7 +60,7 @@ begin
   using private.note_delete_keys k
   where n.id = p_note_id
     and k.note_id = n.id
-    and k.token_hash = encode(public.digest(convert_to(p_owner_token, 'UTF8'), 'sha256'), 'hex');
+    and k.token_hash = encode(digest(convert_to(p_owner_token, 'UTF8'), 'sha256'), 'hex');
 
   get diagnostics removed_count = row_count;
   return removed_count = 1;
