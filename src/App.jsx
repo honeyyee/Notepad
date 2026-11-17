@@ -1,4 +1,4 @@
-import {useEffect,useMemo,useState} from 'react';
+import React,{useEffect,useMemo,useState} from 'react';
 import {createClient} from '@supabase/supabase-js';
 import {Feather,Heart,MessageCircle,Plus,Search,Send,ArrowUpRight,Sparkles,X,Flag,ArrowDown} from 'lucide-react';
 import './styles.css';
